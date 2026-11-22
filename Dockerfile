@@ -2,18 +2,17 @@
 # SplitMates API — multi-stage build for Render (or any Docker host).
 
 # ---------- build stage ----------
-FROM eclipse-temurin:21-jdk AS build
+# Uses the official Maven image: the repo has no .mvn/wrapper directory, so ./mvnw can't run.
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Maven wrapper + POM first so dependency downloads are cached between builds.
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-# The wrapper may have Windows (CRLF) line endings when committed from Windows.
-RUN sed -i 's/\r$//' mvnw && chmod +x mvnw && ./mvnw -B -q dependency:go-offline
+# POM first so dependency downloads are cached between builds.
+COPY pom.xml ./
+RUN mvn -B -q dependency:go-offline
 
 COPY src/ src/
 # Tests need a live database, so they run in CI/locally rather than during the image build.
-RUN ./mvnw -B -q package -DskipTests && cp target/splitmates-api-*.jar app.jar
+RUN mvn -B -q package -DskipTests && cp target/splitmates-api-*.jar app.jar
 
 # ---------- runtime stage ----------
 FROM eclipse-temurin:21-jre

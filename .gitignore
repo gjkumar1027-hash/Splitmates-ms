@@ -1,0 +1,14 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Build output / runtime data
+target/
+uploads/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.log
